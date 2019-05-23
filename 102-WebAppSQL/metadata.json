@@ -1,0 +1,12 @@
+{
+  "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+  "type": "QuickStart",
+  "icon": "windowsVM",
+  "itemDisplayName": "Web App and SQL Azure",
+  "summary": "Deploy Web App and SQL into an App Service connected to SQL Azure",
+  "description": "Deploy infrastructure for a S1 Application Service, a Web App, a SQL Azure instance and connect them with the connection string in the settings.",
+  "githubUsername": "mbenko",
+  "dateUpdated": "2018-05-03"
+}
+
+
