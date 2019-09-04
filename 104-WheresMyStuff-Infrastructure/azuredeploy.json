@@ -3,41 +3,39 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "appName": {
-      "type": "string",
+      "defaultValue": "myApp",
       "minLength": 3,
-      "defaultValue": "myApp"
-    },
-    "favoriteColor": {
-      "type": "string",
-      "defaultValue": "lightgreen"
+      "maxLength": 15,
+      "type": "String"
     },
     "sqlUser": {
-      "type": "string",
-      "defaultValue": "sqladmin"
+      "defaultValue": "sqladmin",
+      "type": "String"
     },
-    "sqlPassword": { "type": "securestring" },
+    "sqlPassword": {
+      "type": "SecureString"
+    },
     "skuName": {
-      "type": "string",
       "defaultValue": "F1",
       "allowedValues": [
         "F1",
-        "S1" 
+        "S1"
       ],
+      "type": "String",
       "metadata": {
         "defaultValue": "F1",
         "description": "Describes plan's pricing tier and capacity. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
       }
     },
     "skuCapacity": {
-      "type": "int",
       "defaultValue": 1,
       "minValue": 1,
+      "type": "Int",
       "metadata": {
         "description": "Describes plan's instance count"
       }
     },
     "appstoreType": {
-      "type": "string",
       "defaultValue": "Standard_LRS",
       "allowedValues": [
         "Standard_LRS",
@@ -45,23 +43,25 @@
         "Standard_GRS",
         "Standard_RAGRS",
         "Premium_LRS"
-      ]
+      ],
+      "type": "String"
     }
   },
   "variables": {
     "location": "[resourceGroup().location]",
     "hostingPlanName": "[concat(parameters('appName'),'-plan')]",
     "webSiteName": "[concat(parameters('appName'),'-web')]",
-    "dbServerName": "[tolower(concat(parameters('appName'),'-azSql'))]",
+    "appstoreName": "[replace(replace(toLower(concat(parameters('appName'),substring(uniqueString(resourceGroup().id),0,4))),'-',''),'_','')]",
+    "dbServerName": "[tolower(concat(variables('appstoreName'),'-azSql'))]",
     "dbName": "[concat(parameters('appName'),'DB')]",
-    "appstoreName": "[toLower(concat(parameters('appName'),'appstore'))]",
+    "cosmosName": "[concat(variables('appstoreName'),'-cosmos')]",
     "dashboardName": "[concat(parameters('appName'),'-Dashboard')]"
   },
   "resources": [
     {
+      "type": "Microsoft.Portal/dashboards",
       "apiVersion": "2015-08-01-preview",
       "name": "[concat('SHARED-DASHBOARD-', variables('dashboardName'))]",
-      "type": "Microsoft.Portal/dashboards",
       "location": "[variables('location')]",
       "tags": {
         "hidden-title": "[variables('dashboardName')]"
@@ -133,10 +133,9 @@
       }
     },
     {
-
+      "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2015-08-01",
       "name": "[variables('hostingPlanName')]",
-      "type": "Microsoft.Web/serverfarms",
       "location": "[variables('location')]",
       "tags": {
         "displayName": "HostingPlan"
@@ -150,17 +149,18 @@
       }
     },
     {
+      "type": "Microsoft.Web/sites",
       "apiVersion": "2015-08-01",
       "name": "[variables('webSiteName')]",
-      "type": "Microsoft.Web/sites",
       "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosName'))]"
+      ],
       "tags": {
         "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]": "Resource",
         "displayName": "Website"
       },
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
-      ],
       "properties": {
         "name": "[variables('webSiteName')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
@@ -169,15 +169,23 @@
             {
               "name": "myDataContext",
               "connectionString": "[concat('Server=tcp:',variables('dbServerName'),'.database.windows.net,1433;Initial Catalog=',variables('dbName'),';Persist Security Info=False;User ID=',parameters('sqlUser'),';Password=',parameters('sqlPassword'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]"
+            },
+            {
+              "name": "myCosmos",
+              "connectionString": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosName')), '2015-11-06').connectionStrings[0].connectionString]"
+            },
+            {
+              "name": "myStorage",
+              "connectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('appstoreName'),'AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('appstoreName')), '2016-01-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
             }
           ]
         }
       },
       "resources": [
         {
-          "name": "appsettings",
           "type": "config",
           "apiVersion": "2015-08-01",
+          "name": "appsettings",
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', variables('webSiteName'))]"
           ],
@@ -185,25 +193,24 @@
             "displayName": "config"
           },
           "properties": {
-            "FavoriteColor": "[parameters('favoriteColor')]",
-            "EnvName": "[variables('webSiteName')]",
-            "AnotherThing": "Does it work?"
+            "FavoriteColor": "lightblue",
+            "EnvName": "[variables('webSiteName')]"
           }
         }
       ]
     },
     {
+      "type": "Microsoft.Insights/autoscalesettings",
       "apiVersion": "2014-04-01",
       "name": "[concat(variables('hostingPlanName'), '-', resourceGroup().name)]",
-      "type": "Microsoft.Insights/autoscalesettings",
       "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
+      ],
       "tags": {
         "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]": "Resource",
         "displayName": "AutoScaleSettings"
       },
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
-      ],
       "properties": {
         "profiles": [
           {
@@ -223,7 +230,7 @@
                   "timeWindow": "PT10M",
                   "timeAggregation": "Average",
                   "operator": "GreaterThan",
-                  "threshold": 80.0
+                  "threshold": 80
                 },
                 "scaleAction": {
                   "direction": "Increase",
@@ -241,7 +248,7 @@
                   "timeWindow": "PT1H",
                   "timeAggregation": "Average",
                   "operator": "LessThan",
-                  "threshold": 60.0
+                  "threshold": 60
                 },
                 "scaleAction": {
                   "direction": "Decrease",
@@ -259,9 +266,9 @@
       }
     },
     {
+      "type": "Microsoft.Insights/alertrules",
       "apiVersion": "2014-04-01",
       "name": "[concat('ServerErrors ', variables('webSiteName'))]",
-      "type": "Microsoft.Insights/alertrules",
       "location": "[variables('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites/', variables('webSiteName'))]"
@@ -282,7 +289,7 @@
             "metricName": "Http5xx"
           },
           "operator": "GreaterThan",
-          "threshold": 0.0,
+          "threshold": 0,
           "windowSize": "PT5M"
         },
         "action": {
@@ -293,9 +300,9 @@
       }
     },
     {
+      "type": "Microsoft.Insights/alertrules",
       "apiVersion": "2014-04-01",
       "name": "[concat('ForbiddenRequests ', variables('webSiteName'))]",
-      "type": "Microsoft.Insights/alertrules",
       "location": "[variables('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites/', variables('webSiteName'))]"
@@ -327,9 +334,9 @@
       }
     },
     {
+      "type": "Microsoft.Insights/alertrules",
       "apiVersion": "2014-04-01",
       "name": "[concat('CPUHigh ', variables('hostingPlanName'))]",
-      "type": "Microsoft.Insights/alertrules",
       "location": "[variables('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
@@ -361,9 +368,9 @@
       }
     },
     {
+      "type": "Microsoft.Insights/alertrules",
       "apiVersion": "2014-04-01",
       "name": "[concat('LongHttpQueue ', variables('hostingPlanName'))]",
-      "type": "Microsoft.Insights/alertrules",
       "location": "[variables('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
@@ -384,7 +391,7 @@
             "metricName": "HttpQueueLength"
           },
           "operator": "GreaterThan",
-          "threshold": 100.0,
+          "threshold": 100,
           "windowSize": "PT5M"
         },
         "action": {
@@ -395,9 +402,9 @@
       }
     },
     {
+      "type": "Microsoft.Insights/components",
       "apiVersion": "2014-04-01",
       "name": "[variables('webSiteName')]",
-      "type": "Microsoft.Insights/components",
       "location": "East US",
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites/', variables('webSiteName'))]"
@@ -411,20 +418,20 @@
       }
     },
     {
-      "location": "[variables('location')]",
-      "name": "[variables('dbServerName')]",
       "type": "Microsoft.Sql/servers",
       "apiVersion": "2014-04-01-preview",
+      "name": "[variables('dbServerName')]",
+      "location": "[variables('location')]",
       "properties": {
         "administratorLogin": "[parameters('sqlUser')]",
         "administratorLoginPassword": "[parameters('sqlPassword')]"
       },
       "resources": [
         {
-          "location": "[variables('location')]",
-          "name": "AllowAllAzureIPs",
           "type": "firewallrules",
           "apiVersion": "2014-04-01",
+          "name": "AllowAllAzureIPs",
+          "location": "[variables('location')]",
           "dependsOn": [
             "[concat('Microsoft.Sql/servers/', variables('dbServerName'))]"
           ],
@@ -434,16 +441,16 @@
           }
         },
         {
-          "location": "[variables('location')]",
-          "name": "[variables('dbName')]",
           "type": "databases",
           "apiVersion": "2014-04-01-preview",
-          "tags": {
-            "[concat('hidden-related:', concat('/providers/Microsoft.Web/sites/', variables('webSiteName')))]": "DataContext"
-          },
+          "name": "[variables('dbName')]",
+          "location": "[variables('location')]",
           "dependsOn": [
             "[concat('Microsoft.Sql/servers/', variables('dbServerName'))]"
           ],
+          "tags": {
+            "[concat('hidden-related:', concat('/providers/Microsoft.Web/sites/', variables('webSiteName')))]": "DataContext"
+          },
           "properties": {
             "collation": "SQL_Latin1_General_CP1_CI_AS",
             "maxSizeBytes": "1073741824"
@@ -452,18 +459,28 @@
       ]
     },
     {
-      "name": "[variables('appstoreName')]",
       "type": "Microsoft.Storage/storageAccounts",
-      "location": "[resourceGroup().location]",
       "apiVersion": "2016-01-01",
-      "sku": {
-        "name": "[parameters('appstoreType')]"
-      },
+      "name": "[variables('appstoreName')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [],
       "tags": {
         "displayName": "appstore"
       },
+      "sku": {
+        "name": "[parameters('appstoreType')]"
+      },
       "kind": "Storage"
+    },
+    {
+      "type": "Microsoft.DocumentDb/databaseAccounts",
+      "apiVersion": "2015-04-08",
+      "name": "[variables('cosmosName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[parameters('appName')]",
+        "databaseAccountOfferType": "Standard"
+      }
     }
   ]
 }
