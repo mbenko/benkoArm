@@ -1,0 +1,12 @@
+{
+  "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+  "type": "QuickStart",
+  "icon": "windowsVM",
+  "itemDisplayName": "Web App with SQL Azure, Cosmos and Storage",
+  "summary": "Deploy Web App with SQL Azure, Cosmos and Storage into an App Service",
+  "description": "Deploy infrastructure for a F1 Application Service, a Web App, Cosmos DB, Storage, and a SQL Azure instance, and connect them with the connection string in the settings.",
+  "githubUsername": "mbenko",
+  "dateUpdated": "2019-09-04"
+}
+
+
