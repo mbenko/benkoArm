@@ -4,4 +4,4 @@
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
-This is a starter template for deploying a linux web app with deployment slots for POC, DEV, TEST and STAGING that can be used for multi-stage deployment pipelines
+This is a starter template for deploying a linux web app with deployment slots for TEST and STAGING that can be used for multi-stage deployment pipelines

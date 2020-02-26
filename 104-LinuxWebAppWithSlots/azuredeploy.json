@@ -9,9 +9,6 @@
     "env": {
       "type": "array",
       "defaultValue": [
-        "POC",
-        "DEV",
-        "TEST",
         "STAGING"
       ]
     },
