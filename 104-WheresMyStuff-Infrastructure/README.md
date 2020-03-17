@@ -7,3 +7,5 @@
 This is a demo architecture that uses Azure Web App Services with SQL Azure, CosmosDB and Azure Storage.
 
 Deck and Demo are below
+<br/>
+<img src="WheresMyStuff.png" style="width:500px;background-color:black;border-color:navy;border:1px;" class="img img-responsive" />
