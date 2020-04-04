@@ -1,0 +1,12 @@
+{
+  "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+  "type": "QuickStart",
+  "icon": "windowsVM",
+  "itemDisplayName": "AzureVM-WebDeploy with .NET Core",
+  "summary": "AzureVM-WebDeploy with .NET Core",
+  "description": "AzureVM-WebDeploy with .NET Core",
+  "githubUsername": "mbenko",
+  "dateUpdated": "2020-04-04"
+}
+
+
