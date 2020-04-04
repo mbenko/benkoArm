@@ -102,7 +102,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               "fileUris": [
-                "https://raw.githubusercontent.com/mbenko/BenkoARM/master/106-AzureVmCore/setup-webdeploy.ps1"
+                "https://raw.githubusercontent.com/mbenko/benkoArm/master/106-AzureVMCore/Setup-WebDeploy.ps1"
               ],
               "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File setup.ps1"
             }
