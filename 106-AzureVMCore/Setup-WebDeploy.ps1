@@ -30,5 +30,5 @@ $proc | Wait-Process
 Get-Content $logFile
 
 # Install .NET Core 
-Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -Proxy $env:HTTP_PROXY -ProxyUseDefaultCredentials -OutFile 'dotnet-install.ps1';
-./dotnet-install.ps1 -InstallDir '~/.dotnet' -Version 'lts' -ProxyAddress $env:HTTP_PROXY -ProxyUseDefaultCredentials;
+Invoke-WebRequest -Uri https://dot.net/v1/dotnet-install.ps1  -OutFile 'dotnet-install.ps1'
+./dotnet-install.ps1 -Channel LTS
