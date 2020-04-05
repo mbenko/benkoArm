@@ -1,3 +1,7 @@
+# Install .NET Core 
+Invoke-WebRequest -Uri https://dot.net/v1/dotnet-install.ps1  -OutFile 'dotnet-install.ps1'
+./dotnet-install.ps1 -Channel LTS
+
 # Install IIS (with Management Console)
 Install-WindowsFeature -name Web-Server -IncludeManagementTools
 
@@ -28,7 +32,3 @@ $arguments= '/i ' + $msiFile + ' ADDLOCAL=ALL /qn /norestart LicenseAccepted="0"
 $proc = (Start-Process -file msiexec -arg $arguments -Passthru)
 $proc | Wait-Process
 Get-Content $logFile
-
-# Install .NET Core 
-Invoke-WebRequest -Uri https://dot.net/v1/dotnet-install.ps1  -OutFile 'dotnet-install.ps1'
-./dotnet-install.ps1 -Channel LTS
