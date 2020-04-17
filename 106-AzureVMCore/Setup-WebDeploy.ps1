@@ -1,6 +1,6 @@
 # Install .NET Core 
 Invoke-WebRequest -Uri https://dot.net/v1/dotnet-install.ps1  -OutFile 'dotnet-install.ps1'
-./dotnet-install.ps1 -Channel LTS
+./dotnet-install.ps1 -Channel LTS | Out-File .\dotnet-install.log
 
 # Install IIS (with Management Console)
 Install-WindowsFeature -name Web-Server -IncludeManagementTools
