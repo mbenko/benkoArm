@@ -1,6 +1,6 @@
 # Linux Web App with Slots
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmbenko%2FbenkoArm%2Fmaster%2F105-LinuxWebAppWithSlots%2FLinuxWebAppWithSlots.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmbenko%2FbenkoArm%2Fmaster%2F106-AzureVMCore%2FAzureVmCore.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
