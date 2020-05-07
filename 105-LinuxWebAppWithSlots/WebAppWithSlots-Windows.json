@@ -60,8 +60,7 @@
         "capacity": "[parameters('skuCapacity')]"
       },
       "properties": {
-        "name": "[variables('hostingPlanName')]",
-        "reserved" : true
+        "name": "[variables('hostingPlanName')]"
       }
     },
     {
