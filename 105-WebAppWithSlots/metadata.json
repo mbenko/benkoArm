@@ -2,9 +2,9 @@
   "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
   "type": "QuickStart",
   "icon": "windowsVM",
-  "itemDisplayName": "Linux Web App With Slots",
-  "summary": "Deploy Linux Web App with Slots",
-  "description": "Deploy infrastructure for a S1 Application Service, a Linux Web App with slots.",
+  "itemDisplayName": "Windows Web App With Slots",
+  "summary": "Deploy Web App with Slots",
+  "description": "Deploy infrastructure for a S1 Application Service, a Windows Web App with slots.",
   "githubUsername": "mbenko",
   "dateUpdated": "2020-02-26"
 }

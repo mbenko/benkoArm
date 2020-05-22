@@ -1,0 +1,60 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "type": "string"
+    },
+    "slotName": {
+      "type": "string",
+      "defaultValue": "fn"
+    },
+    "hostName": {
+      "type": "string",
+      "defaultValue": "default"
+    },
+    "storageName": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "hostingPlanName": "[if(equals(parameters('hostName'),'default'), concat(parameters('appName'),'-plan'), parameters('hostName'))]",
+    "fnName": "[concat(parameters('appName'), '-', parameters('slotName'))]"
+  },
+  "resources": [
+    {
+      "location": "[variables('location')]",
+      "name": "[variables('fnName')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2015-08-01",
+      "kind": "functionapp",
+      "properties": {
+        "name": "[variables('fnName')]",
+        "kind": "functionapp",
+        "httpsOnly": true,
+        "serverFarmId": "[resourceId(resourceGroup().name,'Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "siteConfig": {
+          "alwaysOn": true,
+          "linuxFxVersion": "DOCKER|mcr.microsoft.com/azure-functions/dotnet:3.0-appservice"
+        }
+      },
+      "resources": [
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[concat('Microsoft.Web/Sites/', variables('fnName'))]"
+          ],
+          "properties": {
+            "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageName'), ';AccountKey=', listKeys(resourceId(resourceGroup().name,'Microsoft.Storage/storageAccounts', parameters('storageName')), '2015-06-15').key1, ';EndpointSuffix=', 'core.windows.net')]",
+            "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageName'), ';AccountKey=', listKeys(resourceId(resourceGroup().name,'Microsoft.Storage/storageAccounts', parameters('storageName')), '2015-06-15').key1, ';EndpointSuffix=', 'core.windows.net')]",
+            "FUNCTIONS_EXTENSION_VERSION": "~3",
+            "FUNCTIONS_WORKER_RUNTIME": "dotnet"
+          }
+        }
+      ]
+    }
+  ]
+}
