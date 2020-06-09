@@ -190,7 +190,7 @@
       "apiVersion": "2015-06-01",
       "properties": {
         "contentType": "text/plain",
-        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('appstoreName'),'AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('appstoreName')), '2016-01-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
+        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('appstoreName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('appstoreName')), '2016-01-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyvaultName'))]",
