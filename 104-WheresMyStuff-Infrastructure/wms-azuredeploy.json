@@ -197,25 +197,6 @@
         "[resourceId('Microsoft.Storage/storageAccounts', variables('appStoreName'))]"
       ]
     },
-    //{
-    //  "connectionStrings": [
-    //    {
-    //      "name": "myDataContext",
-    //      "type": "SQLAzure",
-    //      "connectionString": "[concat('Server=tcp:',variables('dbServerName'),'.database.windows.net,1433;Initial Catalog=',variables('dbName'),';Persist Security Info=False;User ID=',parameters('sqlUser'),';Password=',parameters('sqlPassword'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]"
-    //    },
-    //    {
-    //      "name": "myCosmos",
-    //      "type": "Custom",
-    //      "connectionString": "[concat('AccountEndpoint=https://',variables('cosmosName'),'.documents.azure.com:443/;AccountKey=',listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosName')), '2015-11-06').primaryMasterKey)]"
-    //    },
-    //    {
-    //      "name": "myStorage",
-    //      "type": "Custom",
-    //      "connectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('appstoreName'),'AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('appstoreName')), '2016-01-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
-    //    }
-    //  ]
-    //},
     {
       "apiVersion": "2015-08-01",
       "name": "[variables('hostingPlanName')]",
