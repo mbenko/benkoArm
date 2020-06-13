@@ -4,24 +4,39 @@
   "parameters": {
     "appName": {
       "type": "string",
-      "minLength": 3,
-      "maxLength": 15,
-      "defaultValue": "myApp"
+      "minLength": 1
     },
-    "sqlUser": {
+    "deployDt": {
       "type": "string",
-      "defaultValue": "sqladmin"
+      "defaultValue": "[utcNow('MMdd')]"
     },
-    "sqlPassword": { "type": "securestring" },
+    "EnvName": {
+      "type": "string",
+      "defaultValue": "Cloud"
+    },
+    "FavoriteColor": {
+      "type": "string",
+      "defaultValue": "lightgray"
+    },
+    "principalId": {
+      "type": "string",
+      "metadata": {
+        "description": "KeyVault Owner SID"
+      }
+    },
+    "slots": {
+      "type": "array",
+      "defaultValue": [
+        "STAGING"
+      ]
+    },
     "skuName": {
       "type": "string",
-      "defaultValue": "F1",
+      "defaultValue": "S1",
       "allowedValues": [
-        "F1",
         "S1"
       ],
       "metadata": {
-        "defaultValue": "F1",
         "description": "Describes plan's pricing tier and capacity. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
       }
     },
@@ -31,6 +46,43 @@
       "minValue": 1,
       "metadata": {
         "description": "Describes plan's instance count"
+      }
+    },
+    "sqldbmsAdminLogin": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sqldbmsAdminLoginPassword": {
+      "type": "securestring"
+    },
+    "sqldbCollation": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+    },
+    "sqldbEdition": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
+    },
+    "sqldbRequestedServiceObjectiveName": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
       }
     },
     "appstoreType": {
@@ -47,118 +99,136 @@
   },
   "variables": {
     "location": "[resourceGroup().location]",
-    "hostingPlanName": "[concat(parameters('appName'),'-plan')]",
-    "webSiteName": "[concat(parameters('appName'),'-web')]",
-    "appstoreName": "[replace(replace(toLower(concat(parameters('appName'),substring(uniqueString(resourceGroup().id),0,4))),'-',''),'_','')]",
-    "dbServerName": "[tolower(concat(variables('appstoreName'),'-azSql'))]",
-    "dbName": "[concat(parameters('appName'),'DB')]",
-    "cosmosName": "[concat(variables('appstoreName'),'-cosmos')]",
-    "dashboardName": "[concat(parameters('appName'),'-Dashboard')]"
+    "uniqueAppName": "[concat(parameters('appName'),parameters('deployDt'))]",
+    "keyvaultName": "[concat(variables('uniqueAppName'),'-kv')]",
+    "hostingPlanName": "[concat(variables('uniqueAppName'),'-plan')]",
+    "webSiteName": "[concat(variables('uniqueAppName'))]",
+    "appstoreName": "[toLower(concat(variables('uniqueAppName'),'store'))]",
+    "dashboardName": "[concat(variables('uniqueAppName'),'-Dashboard')]",
+    "sqldbmsName": "[concat(variables('uniqueAppName'),'-dbms')]",
+    "sqldbName": "[concat(variables('uniqueAppName'),'-db')]",
+    "cosmosName": "[concat(variables('uniqueAppName'),'-cosmos')]"
   },
   "resources": [
     {
-      "apiVersion": "2015-08-01-preview",
-      "name": "[concat('SHARED-DASHBOARD-', variables('dashboardName'))]",
-      "type": "Microsoft.Portal/dashboards",
-      "location": "[variables('location')]",
-      "tags": {
-        "hidden-title": "[variables('dashboardName')]"
-      },
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[variables('keyvaultName')]",
+      "apiVersion": "2015-06-01",
+      "location": "[resourceGroup().location]",
       "properties": {
-        "lenses": {
-          "0": {
-            "order": 0,
-            "parts": {
-              "0": {
-                "position": {
-                  "x": 0,
-                  "y": 0,
-                  "colSpan": 4,
-                  "rowSpan": 6
-                },
-                "metadata": {
-                  "inputs": [
-                    {
-                      "name": "resourceGroup",
-                      "isOptional": true
-                    },
-                    {
-                      "name": "id",
-                      "value": "[resourceGroup().id]",
-                      "isOptional": true
-                    }
-                  ],
-                  "type": "Extension/HubsExtension/PartType/ResourceGroupMapPinnedPart"
-                }
-              },
-              "1": {
-                "position": {
-                  "x": 4,
-                  "y": 0,
-                  "rowSpan": 3,
-                  "colSpan": 4
-                },
-                "metadata": {
-                  "inputs": [],
-                  "type": "Extension[azure]/HubsExtension/PartType/MarkdownPart",
-                  "settings": {
-                    "content": {
-                      "settings": {
-                        "content": "__Customizations__\n\nUse this dashboard to create and share the operational views of services critical to the application performing. To customize simply pin components to the dashboard and then publish when you're done. Others will see your changes when you publish and share the dashboard.\n\nYou can customize this text too. It supports plain text, __Markdown__, and even limited HTML like images <img width='10' src='https://portal.azure.com/favicon.ico'/> and <a href='https://azure.microsoft.com' target='_blank'>links</a> that open in a new tab.\n",
-                        "title": "Operations",
-                        "subtitle": "[resourceGroup().name]"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+        "sku": {
+          "family": "A",
+          "name": "Standard"
         },
-        "metadata": {
-          "model": {
-            "timeRange": {
-              "value": {
-                "relative": {
-                  "duration": 24,
-                  "timeUnit": 1
-                }
-              },
-              "type": "MsPortalFx.Composition.Configuration.ValueTypes.TimeRange"
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[parameters('principalId')]",
+            "permissions": {
+              "keys": [ "All" ],
+              "secrets": [ "All" ]
+            }
+          },
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[reference(concat(resourceId('Microsoft.Web/sites/', variables('uniqueAppName')),'/providers/Microsoft.ManagedIdentity/Identities/default'), '2015-08-31-PREVIEW').principalId]",
+            "permissions": {
+              "secrets": [
+                "Get",
+                "List"
+              ],
+              "certificates": [
+                "Get"
+              ]
             }
           }
-        }
+        ]
       }
     },
     {
-
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(variables('keyvaultName'),'/myMessage')]",
+      "apiVersion": "2015-06-01",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[concat('Hello from KeyVault - ', variables('keyvaultName'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyvaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(variables('keyvaultName'),'/myDataContext')]",
+      "apiVersion": "2015-06-01",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[concat('Server=tcp:',variables('sqldbmsName'),'.database.windows.net,1433;Initial Catalog=',variables('sqldbName'),';Persist Security Info=False;User ID=',parameters('sqldbmsAdminLogin'),';Password=',parameters('sqldbmsAdminLoginPassword'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyvaultName'))]",
+        "[resourceId('Microsoft.Sql/servers', variables('sqldbmsName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(variables('keyvaultName'),'/myCosmos')]",
+      "apiVersion": "2015-06-01",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[concat('AccountEndpoint=https://',variables('cosmosName'),'.documents.azure.com:443/;AccountKey=',listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosName')), '2015-11-06').primaryMasterKey)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyvaultName'))]",
+        "[resourceId('Microsoft.DocumentDb/databaseAccounts', variables('cosmosName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(variables('keyvaultName'),'/myStorage')]",
+      "apiVersion": "2015-06-01",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('appstoreName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('appstoreName')), '2016-01-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyvaultName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('appStoreName'))]"
+      ]
+    },
+    {
       "apiVersion": "2015-08-01",
       "name": "[variables('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "HostingPlan"
       },
+      "kind": "linux",
       "sku": {
         "name": "[parameters('skuName')]",
         "capacity": "[parameters('skuCapacity')]"
       },
       "properties": {
-        "name": "[variables('hostingPlanName')]"
+        "name": "[variables('hostingPlanName')]",
+        "reserved": true
       }
     },
     {
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2018-02-01",
       "name": "[variables('webSiteName')]",
       "type": "Microsoft.Web/sites",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "tags": {
         "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]": "Resource",
         "displayName": "Website"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosName'))]"
+        "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
       ],
       "properties": {
         "name": "[variables('webSiteName')]",
@@ -168,17 +238,17 @@
             {
               "name": "myDataContext",
               "type": "SQLAzure",
-              "connectionString": "[concat('Server=tcp:',variables('dbServerName'),'.database.windows.net,1433;Initial Catalog=',variables('dbName'),';Persist Security Info=False;User ID=',parameters('sqlUser'),';Password=',parameters('sqlPassword'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]"
+              "connectionString": "[concat('@Microsoft.KeyVault(SecretUri=https://',variables('keyvaultName'),'.vault.azure.net/secrets/myDataContext/)')]"
             },
             {
               "name": "myCosmos",
               "type": "Custom",
-              "connectionString": "[concat('AccountEndpoint=https://',variables('cosmosName'),'.documents.azure.com:443/;AccountKey=',listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosName')), '2015-11-06').primaryMasterKey)]"
+              "connectionString": "[concat('@Microsoft.KeyVault(SecretUri=https://',variables('keyvaultName'),'.vault.azure.net/secrets/myCosmos/)')]"
             },
             {
               "name": "myStorage",
               "type": "Custom",
-              "connectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('appstoreName'),'AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('appstoreName')), '2016-01-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
+              "connectionString": "[concat('@Microsoft.KeyVault(SecretUri=https://',variables('keyvaultName'),'.vault.azure.net/secrets/myStorage/)')]"
             }
           ]
         }
@@ -195,17 +265,88 @@
             "displayName": "config"
           },
           "properties": {
-            "FavoriteColor": "lightblue",
-            "EnvName": "[variables('webSiteName')]"
+            "myEnvName": "[parameters('EnvName')]",
+            "myFavoriteColor": "[parameters('FavoriteColor')]",
+            "myMessage" : "[concat('@Microsoft.KeyVault(SecretUri=https://',variables('keyvaultName'),'.vault.azure.net/secrets/myMessage/)')]"
+          }
+        },
+        {
+          "apiVersion": "2015-08-01",
+          "name": "slotconfignames",
+          "type": "config",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', variables('webSiteName'))]"
+          ],
+          "properties": {
+            "appSettingNames": [ "EnvName" ]
           }
         }
       ]
     },
     {
+      "apiVersion": "2016-08-01",
+      "type": "Microsoft.Web/sites/slots",
+      "name": "[concat(variables('webSiteName'), '/', parameters('slots')[copyIndex()])]",
+      "kind": "app",
+      "location": "[resourceGroup().location]",
+      "comments": "This specifies the web app slots.",
+      "tags": {
+        "displayName": "WebAppSlots"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "siteConfig": {
+          "connectionStrings": [
+            {
+              "name": "myDataContext",
+              "type": "SQLAzure",
+              "connectionString": "[concat('@Microsoft.KeyVault(SecretUri=https://',variables('keyvaultName'),'.vault.azure.net/secrets/myDataContext/)')]"
+            },
+            {
+              "name": "myCosmos",
+              "type": "Custom",
+              "connectionString": "[concat('@Microsoft.KeyVault(SecretUri=https://',variables('keyvaultName'),'.vault.azure.net/secrets/myCosmos/)')]"
+            },
+            {
+              "name": "myStorage",
+              "type": "Custom",
+              "connectionString": "[concat('@Microsoft.KeyVault(SecretUri=https://',variables('keyvaultName'),'.vault.azure.net/secrets/myStorage/)')]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/Sites', variables('webSiteName'))]"
+      ],
+      "resources": [
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[concat(resourceId('Microsoft.Web/sites', variables('webSiteName')),'/slots/',parameters('slots')[copyIndex()])]"
+          ],
+          "tags": {
+            "displayName": "[concat('config-',parameters('slots')[copyIndex()])]"
+          },
+          "properties": {
+            "myEnvName": "[parameters('slots')[copyIndex()]]",
+            "myFavoriteColor": "\"lightblue\".",
+            "myMessage": "[concat('@Microsoft.KeyVault(SecretUri=https://',variables('keyvaultName'),'.vault.azure.net/secrets/myMessage/)')]"
+
+          }
+        }
+      ],
+      "copy": {
+        "name": "webPortalSlot",
+        "count": "[length(parameters('slots'))]"
+      }
+    },
+    {
       "apiVersion": "2014-04-01",
       "name": "[concat(variables('hostingPlanName'), '-', resourceGroup().name)]",
       "type": "Microsoft.Insights/autoscalesettings",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "tags": {
         "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]": "Resource",
         "displayName": "AutoScaleSettings"
@@ -284,42 +425,58 @@
       }
     },
     {
-      "location": "[variables('location')]",
-      "name": "[variables('dbServerName')]",
-      "type": "Microsoft.Sql/servers",
-      "apiVersion": "2014-04-01-preview",
+      "apiVersion": "2015-04-08",
+      "type": "Microsoft.DocumentDb/databaseAccounts",
+      "name": "[variables('cosmosName')]",
+      "location": "[resourceGroup().location]",
       "properties": {
-        "administratorLogin": "[parameters('sqlUser')]",
-        "administratorLoginPassword": "[parameters('sqlPassword')]"
+        "name": "[variables('uniqueAppName')]",
+        "databaseAccountOfferType": "Standard"
+      }
+    },
+    {
+      "name": "[variables('sqldbmsName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "sqldbms"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('sqldbmsAdminLogin')]",
+        "administratorLoginPassword": "[parameters('sqldbmsAdminLoginPassword')]"
       },
       "resources": [
         {
-          "location": "[variables('location')]",
-          "name": "AllowAllAzureIPs",
+          "name": "AllowAllWindowsAzureIps",
           "type": "firewallrules",
-          "apiVersion": "2014-04-01",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
           "dependsOn": [
-            "[concat('Microsoft.Sql/servers/', variables('dbServerName'))]"
+            "[resourceId('Microsoft.Sql/servers', variables('sqldbmsName'))]"
           ],
           "properties": {
-            "endIpAddress": "0.0.0.0",
-            "startIpAddress": "0.0.0.0"
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
           }
         },
         {
-          "location": "[variables('location')]",
-          "name": "[variables('dbName')]",
+          "name": "[variables('sqldbName')]",
           "type": "databases",
+          "location": "[resourceGroup().location]",
           "apiVersion": "2014-04-01-preview",
-          "tags": {
-            "[concat('hidden-related:', concat('/providers/Microsoft.Web/sites/', variables('webSiteName')))]": "DataContext"
-          },
           "dependsOn": [
-            "[concat('Microsoft.Sql/servers/', variables('dbServerName'))]"
+            "[resourceId('Microsoft.Sql/servers', variables('sqldbmsName'))]"
           ],
+          "tags": {
+            "displayName": "sqldb"
+          },
           "properties": {
-            "collation": "SQL_Latin1_General_CP1_CI_AS",
-            "maxSizeBytes": "1073741824"
+            "collation": "[parameters('sqldbCollation')]",
+            "edition": "[parameters('sqldbEdition')]",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "[parameters('sqldbRequestedServiceObjectiveName')]"
           }
         }
       ]
@@ -337,16 +494,6 @@
         "displayName": "appstore"
       },
       "kind": "Storage"
-    },
-    {
-      "apiVersion": "2015-04-08",
-      "type": "Microsoft.DocumentDb/databaseAccounts",
-      "name": "[variables('cosmosName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "name": "[parameters('appName')]",
-        "databaseAccountOfferType": "Standard"
-      }
     }
   ]
 }
