@@ -1,0 +1,11 @@
+{
+  "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+  "type": "QuickStart",
+  "itemDisplayName": "Linux WebApp with Keyvault and Storage",
+  "summary": "This template demonstrates how to create and manage connection strings for Cosmos, SQL and Storage into a Linux WebApp with Slots",
+  "description": "This template demonstrates how to create and manage connection strings for Cosmos, SQL and Storage into a Linux WebApp with Slots",
+  "githubUsername": "mbenko",
+  "dateUpdated": "2020-10-28"
+}
+
+
