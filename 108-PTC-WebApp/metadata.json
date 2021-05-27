@@ -1,0 +1,12 @@
+{
+  "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+  "type": "QuickStart",
+  "icon": "windowsVM",
+  "itemDisplayName": "Web App and Dashboard",
+  "summary": "Deploy Web App and Standard Dashboard",
+  "description": "Deploy infrastructure for a S1 Application Service, a Web App and a standard dashboard.",
+  "githubUsername": "mbenko",
+  "dateUpdated": "2019-07-16"
+}
+
+
