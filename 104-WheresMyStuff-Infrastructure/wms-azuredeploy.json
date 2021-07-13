@@ -20,6 +20,7 @@
     },
     "principalId": {
       "type": "string",
+      "defaultValue": "not-specified",
       "metadata": {
         "description": "KeyVault Owner SID"
       }
@@ -103,7 +104,7 @@
     "keyvaultName": "[concat(variables('uniqueAppName'),'-kv')]",
     "hostingPlanName": "[concat(variables('uniqueAppName'),'-plan')]",
     "webSiteName": "[concat(variables('uniqueAppName'))]",
-    "appstoreName": "[toLower(concat(variables('uniqueAppName'),'store'))]",
+    "appstoreName": "[toLower(concat(replace(variables('uniqueAppName'),'-',''),'store'))]",
     "dashboardName": "[concat(variables('uniqueAppName'),'-Dashboard')]",
     "sqldbmsName": "[concat(variables('uniqueAppName'),'-dbms')]",
     "sqldbName": "[concat(variables('uniqueAppName'),'-db')]",
@@ -123,6 +124,7 @@
         "tenantId": "[subscription().tenantId]",
         "accessPolicies": [
           {
+            "condition":"[not(equals(parameters('principalId'),'not-specified'))]",
             "tenantId": "[subscription().tenantId]",
             "objectId": "[parameters('principalId')]",
             "permissions": {
