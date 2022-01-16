@@ -1,0 +1,12 @@
+{
+  "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+  "type": "QuickStart",
+  "icon": "windowsVM",
+  "itemDisplayName": "PTC Web App",
+  "summary": "Deploy Web App",
+  "description": "Deploy infrastructure for a S1 Application Service",
+  "githubUsername": "mbenko",
+  "dateUpdated": "2021-05-27"
+}
+
+
