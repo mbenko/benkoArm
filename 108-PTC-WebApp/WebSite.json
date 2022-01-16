@@ -63,73 +63,24 @@
       "properties": {
         "name": "[variables('webSiteName')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
-      }
-    },
-    {
-      "apiVersion": "2014-04-01",
-      "name": "[concat(variables('hostingPlanName'), '-', resourceGroup().name)]",
-      "type": "Microsoft.Insights/autoscalesettings",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]": "Resource",
-        "displayName": "AutoScaleSettings"
       },
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
-      ],
-      "properties": {
-        "profiles": [
-          {
-            "name": "Default",
-            "capacity": {
-              "minimum": 1,
-              "maximum": 2,
-              "default": 1
-            },
-            "rules": [
-              {
-                "metricTrigger": {
-                  "metricName": "CpuPercentage",
-                  "metricResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
-                  "timeGrain": "PT1M",
-                  "statistic": "Average",
-                  "timeWindow": "PT10M",
-                  "timeAggregation": "Average",
-                  "operator": "GreaterThan",
-                  "threshold": 80.0
-                },
-                "scaleAction": {
-                  "direction": "Increase",
-                  "type": "ChangeCount",
-                  "value": 1,
-                  "cooldown": "PT10M"
-                }
-              },
-              {
-                "metricTrigger": {
-                  "metricName": "CpuPercentage",
-                  "metricResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
-                  "timeGrain": "PT1M",
-                  "statistic": "Average",
-                  "timeWindow": "PT1H",
-                  "timeAggregation": "Average",
-                  "operator": "LessThan",
-                  "threshold": 60.0
-                },
-                "scaleAction": {
-                  "direction": "Decrease",
-                  "type": "ChangeCount",
-                  "value": 1,
-                  "cooldown": "PT1H"
-                }
-              }
-            ]
+      "resources": [
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('webSiteName'))]"
+          ],
+          "tags": {
+            "displayName": "config"
+          },
+          "properties": {
+            "EnvName": "[parameters('EnvName')]",
+            "FavoriteColor": "[parameters('FavoriteColor')]"
           }
-        ],
-        "enabled": false,
-        "name": "[concat(variables('hostingPlanName'), '-', resourceGroup().name)]",
-        "targetResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
-      }
+        }
+      ]
     },
     {
       "apiVersion": "2014-04-01",
