@@ -4,9 +4,9 @@
   "icon": "windowsVM",
   "itemDisplayName": "PTC Web App",
   "summary": "Deploy Web App",
-  "description": "Deploy infrastructure for a S1 Application Service",
+  "description": "Deploy infrastructure for IaC Starter project - App Service, Plan & App Insights",
   "githubUsername": "mbenko",
-  "dateUpdated": "2021-05-27"
+  "dateUpdated": "2022-01-16"
 }
 
 
