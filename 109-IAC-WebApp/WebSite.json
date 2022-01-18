@@ -2,31 +2,10 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "appName": {
-      "type": "string",
-      "minLength": 1
-    },
+    "appName": { "type": "string" },
     "envName": { "type": "string" },
-    "favoriteColor": {"type": "string"},
-    "skuName": {
-      "type": "string",
-      "defaultValue": "F1",
-      "allowedValues": [
-        "F1",
-        "S1"
-      ],
-      "metadata": {
-        "description": "Describes plan's pricing tier and capacity. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
-      }
-    },
-    "skuCapacity": {
-      "type": "int",
-      "defaultValue": 1,
-      "minValue": 1,
-      "metadata": {
-        "description": "Describes plan's instance count"
-      }
-    }
+    "favoriteColor": { "type": "string" },
+    "mySecret": { "type": "securestring" }
   },
   "variables": {
     "prefix": "[concat(parameters('envName'),'-',parameters('appName'))]",
@@ -40,22 +19,25 @@
       "name": "[variables('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[resourceGroup().location]",
+      "kind": "linux",
       "tags": {
         "displayName": "HostingPlan"
       },
       "sku": {
-        "name": "[parameters('skuName')]",
-        "capacity": "[parameters('skuCapacity')]"
+        "name": "S1",
+        "tier": "Standard"
       },
       "properties": {
-        "name": "[variables('hostingPlanName')]"
+        "name": "[variables('hostingPlanName')]",
+        "reserved": true
       }
     },
     {
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2020-12-01",
       "name": "[variables('webSiteName')]",
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
+      "kind": "app,linux",
       "tags": {
         "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]": "Resource",
         "displayName": "Website"
@@ -64,13 +46,17 @@
         "[resourceId('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
       ],
       "properties": {
-        "name": "[variables('webSiteName')]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "siteConfig": {
+          "LinuxFxVersion" : "DOTNETCORE|6.0",
+          "appCommandLine" : "dotnet myapp.dll"
+        }
       },
       "resources": [
         {
           "name": "appsettings",
           "type": "config",
+          "location": "[resourceGroup().location]",
           "apiVersion": "2015-08-01",
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', variables('webSiteName'))]"
@@ -79,18 +65,19 @@
             "displayName": "config"
           },
           "properties": {
-            "EnvName": "[parameters('envName')]",
+            "EnvName": "[parameters('appName')]",
             "FavoriteColor": "[parameters('favoriteColor')]",
+            "MySecret": "[parameters('mySecret')]",
             "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('microsoft.insights/components/', variables('insightsName'))).InstrumentationKey]"
           }
         }
       ]
     },
     {
-      "apiVersion": "2014-04-01",
+      "apiVersion": "2020-02-02-preview",
       "name": "[variables('insightsName')]",
       "type": "Microsoft.Insights/components",
-      "location": "East US",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites/', variables('webSiteName'))]"
       ],
@@ -98,8 +85,9 @@
         "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('webSiteName'))]": "Resource",
         "displayName": "AppInsightsComponent"
       },
-      "properties": {
-        "applicationId": "[variables('webSiteName')]"
+      "kind":"web",
+      "properties" : {
+        "Application_Type": "web"
       }
     }
   ]
